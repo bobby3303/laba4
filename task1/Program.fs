@@ -1,25 +1,28 @@
-﻿open System
+open System
 let rnd = Random()
 
 type Tree = 
     | Empty
     | Node of int * Tree * Tree
 
-let rec dice d =
-    if d > 7 then 
-        Empty
+let rec insert tree x =
+    match tree with
+    | Empty -> 
+        Node(x, Empty, Empty) 
+    | Node(v, l, r) ->
+        if x < v then 
+            Node(v, insert l x, r)   
+        elif x > v then 
+            Node(v, l, insert r x) 
+        else 
+            Node(v, l, r) 
 
+let rec genTree n tree =
+    if n = 0 then 
+        tree 
     else
-        let threshold = 
-            if d < 3 then 2    
-            elif d < 5 then 8  
-            else 15     
-            
-        if rnd.Next(1, 21) > threshold then
-            let v = rnd.Next(1,10001)
-            Node (v, dice(d + 1), dice(d + 1))
-        else
-            Empty
+        let value = rnd.Next(1, 10001)
+        genTree (n - 1) (insert tree value)
 
 let rec upDigit n =
     if n < 10 then
@@ -39,16 +42,12 @@ let rec upDigit n =
 
         (upDigit remain) * 10 + newDigit
 
-let rec mapTree tree =
+let rec map f tree =
     match tree with
-    | Empty ->
-        Empty
+    | Empty -> Empty
     | Node(v, l, r) ->
-        let newV = upDigit v
-        let newL = mapTree l
-        let newR = mapTree r
-
-        Node (newV, newL, newR)
+        let newVal = f v
+        Node(newVal, map f l, map f r)
 
 let rec print d tree =
     match tree with
@@ -64,7 +63,7 @@ let rec print d tree =
 
 [<EntryPoint>]
 let main args =
-    let source = dice 1
+    let source = genTree (rnd.Next(0, 24)) Empty
     
     if source = Empty then 
         printfn "Дерево пустое, попробуйте запустить еще раз"
@@ -73,10 +72,9 @@ let main args =
         print 0 source
 
         // Применяем мап
-        let result = mapTree source
+        let result = map upDigit source
         printfn "\nОБРАБОТАННОЕ ДЕРЕВО (разряды +1, кроме 9):"
         print 0 result
 
     0
-
 
